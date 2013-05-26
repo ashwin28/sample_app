@@ -29,6 +29,25 @@ describe "User pages" do
       end
     end
 
+    describe "admin links" do
+
+      it { should_not have_link('toggle admin') }
+
+      describe "as an admin user" do
+        let(:admin) { FactoryGirl.create(:admin) }
+        before do
+          sign_in admin
+          visit users_path
+        end
+
+        it { should have_link('toggle admin', href: toggle_admin_user_path(User.first)) }
+        it { should_not have_link('toggle admin', href: toggle_admin_user_path(admin)) }
+        #it "should be able to make another user admin" do
+        #  expect { click_link('toggle admin') }.to change(User.first, :admin).from(false).to(true)
+        #end
+      end
+    end
+
     describe "delete links" do
 
       it { should_not have_link('delete') }

@@ -149,6 +149,11 @@ describe "Authentication" do
         before { delete user_path(user) }
         specify { response.should redirect_to(root_path) }        
       end
+
+      describe "submitting a GET request to the Users#toggle_admin action" do
+        before { get toggle_admin_user_path(user) }
+        specify { response.should redirect_to(root_path) }        
+      end
     end
 
     describe "as admin user" do
@@ -158,6 +163,13 @@ describe "Authentication" do
       describe "deleting themmself by submitting a DELETE request to the Users#destroy action" do
         specify do
           expect { delete user_path(admin) }.not_to change(User, :count).by(-1)
+          response.should redirect_to(users_path)
+        end
+      end
+
+      describe "removing their admin status by submitting a GET request to the Users#toggle_admin action" do
+        specify do
+          expect { get toggle_admin_user_path(admin) }.not_to change(User.last, :admin).from(true).to(false)
           response.should redirect_to(users_path)
         end
       end

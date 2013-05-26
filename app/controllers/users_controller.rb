@@ -1,7 +1,7 @@
 class UsersController < ApplicationController
   before_filter :signed_in_user,    only: [:index, :edit, :update, :destroy]
   before_filter :correct_user,      only: [:edit, :update]
-  before_filter :admin_user,        only: :destroy
+  before_filter :admin_user,        only: [:destroy, :toggle_admin]
   before_filter :genuine_new_user,  only: [:new, :create]
 
   def show
@@ -10,6 +10,18 @@ class UsersController < ApplicationController
   
   def new
     @user = User.new
+  end
+
+  def toggle_admin
+    user = User.find(params[:id])
+    if current_user?(user)
+      flash[:error] = "You cannot change your own administrative status."
+    else
+      user.toggle!(:admin)
+      message = user.admin? ? "User now has administrative status." : "User has lost administrative status."
+      flash[:success] = message
+    end
+    redirect_to users_url
   end
 
   def destroy
