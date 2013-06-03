@@ -139,7 +139,10 @@ describe "Authentication" do
     describe "as wrong user" do
       let(:user) { FactoryGirl.create(:user) }
       let(:wrong_user) { FactoryGirl.create(:user, email: "wrong@example.com") }
-      before { sign_in user }
+      before do
+        FactoryGirl.create(:micropost, user: wrong_user, content: "Don't delete me!")
+        sign_in user
+      end
 
       describe "visiting Users#edit page" do
         before { visit edit_user_path(wrong_user) }
@@ -149,6 +152,18 @@ describe "Authentication" do
       describe "submitting a PUT request to the Users#update action" do
         before { put user_path(wrong_user) }
         specify { response.should redirect_to(root_path) }
+      end
+
+      describe "visiting another user's profile page" do
+        before { visit user_path(wrong_user)}
+        it { should_not have_selector('a', text: "delete")}
+      end
+
+      describe "submitting a DELETE request to another user's micropost" do
+        specify do
+          expect { delete micropost_path(wrong_user.microposts.first.id) }.not_to change(Micropost, :count).by(-1)
+          response.should redirect_to(root_path)
+        end
       end
     end
 

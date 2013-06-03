@@ -90,6 +90,24 @@ describe "User pages" do
       it { should have_content(m2.content) }
       it { should have_content(user.microposts.count) }
     end
+
+    describe "microposts pagination" do
+
+      before do
+        30.times { FactoryGirl.create(:micropost, user: user, content: "Foobar") }
+        visit user_path(user)
+      end
+      after { Micropost.delete_all }
+
+      it { should have_selector('div.span8') }
+      it { should have_selector('h3', text: "Microposts (#{user.microposts.count})")}
+
+      it "should list each user" do
+        Micropost.paginate(page: 1).each do |micropost|
+          page.should have_selector('li', text: micropost.content)
+        end
+      end
+    end
   end
 
   describe "signup" do

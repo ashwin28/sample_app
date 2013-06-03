@@ -1,4 +1,5 @@
 require 'spec_helper'
+include ActionView::Helpers::TextHelper
 
 describe "Static pages" do
 
@@ -29,6 +30,26 @@ describe "Static pages" do
       it "should render the user's feed" do
         user.feed.each do |item|
           page.should have_selector("li##{item.id}", text: item.content)
+        end
+      end
+
+      it { should have_selector('h1', text: user.name) }
+      it { should have_selector('span', text: pluralize(user.microposts.count.to_s, "micropost")) }
+
+      describe "have microposts pagination" do
+        before do
+          30.times { FactoryGirl.create(:micropost, user: user, content: "Foobar") }
+          visit root_path
+        end
+        after { Micropost.delete_all }
+
+        it { should have_selector('div.span8') }
+        it { should have_selector('h3', text: "Micropost Feed")}
+
+        it "should list each user" do
+          Micropost.paginate(page: 1).each do |micropost|
+            page.should have_selector("li##{micropost.id}", text: micropost.content)
+          end
         end
       end
     end
