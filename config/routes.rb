@@ -1,12 +1,13 @@
 SampleApp::Application.routes.draw do
   
-  resources :users
+  resources :users do
+    member do
+      get :toggle_admin, :following, :followers
+    end
+  end
   resources :sessions, only: [:new, :create, :destroy]
   resources :microposts, only: [:create, :destroy]
-
-  resources :users do
-    get :toggle_admin, on: :member
-  end
+  resources :relationships, only: [:create, :destroy]
 
   root to: 'static_pages#home'
   match '/help',    to: 'static_pages#help'
