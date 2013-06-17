@@ -11,9 +11,37 @@ describe "User pages" do
       sign_in user
       visit users_path
     end
+    after(:each)  { User.delete_all }
 
     it { should have_selector('title', text: 'All users') }
     it { should have_selector('h1',    text: 'All users') }
+
+    describe "searching" do
+      let(:user1) { FactoryGirl.create(:user, name: "Ashwin") }
+      let(:user2) { FactoryGirl.create(:user, name: "Example User2") }
+      let(:user3) { FactoryGirl.create(:user, name: "Example User3") }
+
+      describe "for a valid user" do
+        before { search_for(user1.name) }
+
+        it { should have_link(user1.name, href: user_path(user1)) }
+        it { should_not have_link(user.name, href: user_path(user)) }
+        it { should_not have_link(user2.name, href: user_path(user2)) }
+        it { should_not have_link(user3.name, href: user_path(user3)) }
+      end
+
+      describe "for a invalid user" do
+        before { search_for("invalid user") }
+
+        it { should have_selector('div.alert.alert-error', text: 'No such users were found!') }
+
+        it "should list all users" do
+          User.paginate(page: 1).each do |user|
+            page.should have_link(user.name, href: user_path(user))
+          end
+        end        
+      end
+    end
     
     describe "pagination" do
 
@@ -31,6 +59,7 @@ describe "User pages" do
 
     describe "admin links" do
 
+      it { should have_link(user.name, href: user_path(user)) }
       it { should_not have_link('toggle admin') }
 
       describe "as an admin user" do
@@ -40,11 +69,24 @@ describe "User pages" do
           visit users_path
         end
 
-        it { should have_link('toggle admin', href: toggle_admin_user_path(User.first)) }
+        it { should have_link('toggle admin', href: toggle_admin_user_path(user)) }
+        it { should have_link(admin.name, href: user_path(admin)) }
         it { should_not have_link('toggle admin', href: toggle_admin_user_path(admin)) }
         #it "should be able to make another user admin" do
         #  expect { click_link('toggle admin') }.to change(User.first, :admin).from(false).to(true)
         #end
+
+        describe "should be able to make another user admin" do
+          before do
+            click_link('toggle admin')
+            sign_in user
+            visit users_path
+          end
+
+          it { should have_link(user.name, href: user_path(user)) }
+          it { should_not have_link('toggle admin', href: toggle_admin_user_path(user)) }
+          it { should have_link('toggle admin', href: toggle_admin_user_path(admin)) }
+        end
       end
     end
 

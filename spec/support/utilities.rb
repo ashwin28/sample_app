@@ -18,6 +18,12 @@ def edit_user_sign_in(user)
   cookies[:remember_token] = user.remember_token
 end
 
+def search_for(name)
+  visit users_path
+  fill_in "search", with: name
+  click_button "Search"
+end
+
 RSpec::Matchers.define :have_error_message do |message|
   match do |page|
     page.should have_selector('div.alert.alert-error', text: message)

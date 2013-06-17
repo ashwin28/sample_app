@@ -48,7 +48,16 @@ class UsersController < ApplicationController
   end
 
   def index
-    @users = User.paginate(page: params[:page])
+    if params[:search]
+      @users = User.where("name LIKE ?",
+               "%#{params[:search]}%").paginate(page: params[:page]).order('name ASC')
+      if @users.empty?
+        flash[:error] = "No such users were found!"
+        redirect_to users_url
+      end
+    else
+      @users = User.paginate(page: params[:page])
+    end
   end
 
   def edit
